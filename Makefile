@@ -1,5 +1,8 @@
 run: compile
-	./main.out
+	./main
  
 compile: main.cpp
-	sudo g++ main.cpp -o main.out -lSDL2 -lSDL2_image
+	g++ main.cpp -o main -lSDL2 -lSDL2_image
+
+clear: ./main
+	rm ./main

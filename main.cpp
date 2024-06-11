@@ -1,60 +1,18 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <iostream>
+#include "loadTexture.h"
 
-SDL_Texture *loadTexture(std::string path, SDL_Renderer *renderer)
+SDL_Rect Sprite(int x, int y, int w, int h)
 {
-    SDL_Texture *texture = NULL;
-    SDL_Surface *loadedSurface = IMG_Load(path.c_str());
+    SDL_Rect spriteClip;
 
-    if (!loadedSurface)
-    {
-        std::cout << "Unable To Load Image " << IMG_GetError() << std::endl;
-    }
-    else
-    {
-        texture = SDL_CreateTextureFromSurface(renderer, loadedSurface);
+    spriteClip.x = x;
+    spriteClip.y = y;
+    spriteClip.w = w;
+    spriteClip.h = h;
 
-        if (!texture)
-        {
-            std::cout << "Unable To Create Texture " << SDL_GetError() << std::endl;
-        }
-
-        SDL_FreeSurface(loadedSurface);
-    }
-
-    return texture;
-}
-
-bool loadMedia(std::string path, SDL_Renderer *renderer)
-{
-
-    bool success = true;
-
-    SDL_Texture *mediaTexture = loadTexture(path, renderer);
-
-    if (!mediaTexture)
-    {
-        std::cout << "Failed To Load Texture Image " << SDL_GetError() << std::endl;
-
-        success = false;
-    }
-
-    return success;
-}
-
-void close(SDL_Window *window, SDL_Renderer *renderer, SDL_Texture *mediaTexture)
-{
-    SDL_DestroyWindow(window);
-    SDL_DestroyRenderer(renderer);
-    SDL_DestroyTexture(mediaTexture);
-
-    window = NULL;
-    renderer = NULL;
-    mediaTexture = NULL;
-
-    IMG_Quit();
-    SDL_Quit();
+    return spriteClip;
 }
 
 int main(int argc, char *args[])
@@ -68,29 +26,28 @@ int main(int argc, char *args[])
     else
     {
         const int screenWidth = 640;
-        const int screenHeight = 400;
-
-        bool success = true;
+        const int screenHeight = 300;
 
         SDL_Window *window = NULL;
+        SDL_Renderer *renderer = NULL;
+        LoadTexture texture;
+
+        SDL_Rect SpriteClip;
 
         window = SDL_CreateWindow("Pacman Game", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, screenWidth, screenHeight, SDL_WINDOW_SHOWN);
 
         if (!window)
         {
             std::cout << "Window Could Not be Displayed " << SDL_GetError() << std::endl;
-            success = false;
         }
         else
         {
 
-            SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
-            SDL_Texture *texture = NULL;
+            renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 
             if (!renderer)
             {
                 std::cout << "Renderer Cannot Be Created " << std::endl;
-                success = false;
             }
             else
             {
@@ -101,18 +58,20 @@ int main(int argc, char *args[])
                 if (!(IMG_Init(imgFlags) & imgFlags))
                 {
                     std::cout << "SDL_image Could Not Be Initialized " << IMG_GetError() << std::endl;
-                    success = false;
                 };
 
-                std::string Path = "pacmanPack/Tileset.png";
+                std::string Path = "pacmanPack/BigCoin.png";
 
-                if (loadMedia(Path, renderer))
+                if (!texture.LoadTextureFromFile(Path, renderer, 4, 4))
                 {
-                    std::cout << "Image Could Not be Loaded " << std::endl;
+                    std::cout << "Texture Could Not be Loaded From File " << std::endl;
+
+                    exit(0);
                 }
                 else
                 {
-                    SDL_Texture *texture = loadTexture(Path, renderer);
+                    std::cout << texture.GetHeight() << texture.GetWidth() << std::endl;
+                    SpriteClip = Sprite(0, 0, 16, 16);
                 }
             }
 
@@ -150,11 +109,19 @@ int main(int argc, char *args[])
                 }
 
                 SDL_RenderClear(renderer);
-                SDL_RenderCopy(renderer, texture, NULL, NULL);
+                texture.RenderOnViewPort(0, 0, screenWidth, screenHeight, renderer, SpriteClip);
+                texture.ColorMod(0x89, 0x7f, 0xa8);
                 SDL_RenderPresent(renderer);
             }
 
-            close(window, renderer, texture);
+            SDL_DestroyWindow(window);
+            SDL_DestroyRenderer(renderer);
+
+            window = NULL;
+            renderer = NULL;
+
+            IMG_Quit();
+            SDL_Quit();
         }
     }
 
