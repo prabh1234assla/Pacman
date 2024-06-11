@@ -1,8 +1,8 @@
 run: compile
-	./main
+	./main.out
  
 compile: main.cpp
-	g++ main.cpp -o main -lSDL2 -lSDL2_image
+	g++ main.cpp -o main.out -lSDL2 -lSDL2_image
 
-clear: ./main
-	rm ./main
+clear: ./main.out
+	rm ./main.out

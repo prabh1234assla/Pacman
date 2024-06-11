@@ -8,30 +8,53 @@ class LoadTexture
 {
 private:
     SDL_Texture *texture = NULL;
-    int textureWidth = 0;
-    int textureHeight = 0;
-    int scaleX = 0;
-    int scaleY = 0;
+    SDL_Rect Collider;
 
-    void Render(int x, int y, SDL_Rect *clip, SDL_Renderer *renderer, double angle, SDL_Point *center, SDL_RendererFlip flip)
+    int textureWidth = -1;
+    int textureHeight = -1;
+    int scale = 0;
+
+    int xpos = -1;
+    int ypos = -1;
+
+    void Render(int x, int y, SDL_Renderer *renderer, SDL_Rect *clip, double angle, SDL_Point *center, SDL_RendererFlip flip)
     {
 
         SDL_Rect renderQuad = {x, y, this->textureWidth, this->textureHeight};
 
+        renderQuad.x = x;
+        renderQuad.y = y;
+
+        this->Collider.x = x;
+        this->Collider.y = y;
+
+        this->xpos = x;
+        this->ypos = y;
+
         if (!clip)
         {
             std::cout << "Clip Was Wrong/Not Defined " << std::endl;
+
+            renderQuad.w = this->textureWidth;
+            renderQuad.h = this->textureHeight;
+
+            this->Collider.w = this->textureWidth;
+            this->Collider.h = this->textureHeight;
+
+            SDL_RenderCopyEx(renderer, this->texture, NULL, &renderQuad, angle, center, flip);
         }
         else
         {
-            renderQuad.x = x;
-            renderQuad.y = y;
-            renderQuad.w = clip->w * this->scaleX;
-            renderQuad.h = clip->h * this->scaleY;
-        }
 
-        SDL_RenderCopyEx(renderer, this->texture, clip, &renderQuad, angle, center, flip);
-    }
+            renderQuad.w = clip->w * this->scale;
+            renderQuad.h = clip->h * this->scale;
+
+            this->Collider.w = clip->w * this->scale;
+            this->Collider.h = clip->h * this->scale;
+
+            SDL_RenderCopyEx(renderer, this->texture, clip, &renderQuad, angle, center, flip);
+        }
+    };
 
 public:
     SDL_Texture *GetTexture()
@@ -45,9 +68,18 @@ public:
         return NULL;
     }
 
+    SDL_Rect GetRect()
+    {
+        if (this->texture)
+        {
+            return this->Collider;
+        }
+        std::cout << "Define Texture First" << std::endl;
+    }
+
     int GetWidth()
     {
-        if (this->textureWidth)
+        if (this->texture)
         {
             return this->textureWidth;
         }
@@ -58,9 +90,31 @@ public:
 
     int GetHeight()
     {
-        if (this->textureHeight)
+        if (this->texture)
         {
             return this->textureHeight;
+        }
+        std::cout << "Define Texture First" << std::endl;
+
+        return -1;
+    }
+
+    int GetXpos()
+    {
+        if (this->texture)
+        {
+            return this->xpos;
+        }
+        std::cout << "Define Texture First" << std::endl;
+
+        return -1;
+    }
+
+    int GetYpos()
+    {
+        if (this->texture)
+        {
+            return this->ypos;
         }
         std::cout << "Define Texture First" << std::endl;
 
@@ -78,7 +132,7 @@ public:
 
         SDL_RenderSetViewport(renderer, &viewport);
 
-        this->Render(x, y, SpriteClip, renderer, angle, center, flip);
+        this->Render(x, y, renderer, SpriteClip, angle, center, flip);
     }
 
     void setColorKey(SDL_Surface *loadedSurface, Uint8 r, Uint8 g, Uint8 b)
@@ -101,15 +155,14 @@ public:
         SDL_SetTextureAlphaMod(this->texture, alpha);
     }
 
-    bool LoadTextureFromFile(std::string path, SDL_Renderer *renderer, int scaleX = 1, int scaleY = 1, bool Enable = false, Uint8 r = 0, Uint8 g = 0, Uint8 b = 0)
+    bool LoadTextureFromFile(std::string path, SDL_Renderer *renderer, int scale = 1, bool Enable = false, Uint8 r = 0, Uint8 g = 0, Uint8 b = 0)
     {
         freeResources();
 
         SDL_Texture *texture = NULL;
         SDL_Surface *loadedSurface = IMG_Load(path.c_str());
 
-        this->scaleX = scaleX;
-        this->scaleY = scaleY;
+        this->scale = scale;
 
         if (!loadedSurface)
         {
@@ -131,8 +184,8 @@ public:
             }
             else
             {
-                this->textureWidth = loadedSurface->w * scaleX;
-                this->textureHeight = loadedSurface->h * scaleY;
+                this->textureWidth = loadedSurface->w * scale;
+                this->textureHeight = loadedSurface->h * scale;
 
                 SDL_FreeSurface(loadedSurface);
             }
@@ -148,20 +201,20 @@ public:
         return this->texture != NULL;
     }
 
-    void Opacity(Uint8 &a)
+    void Opacity(Uint8 &alpha)
     {
-        if (a + 32 > 255)
-            a = 255;
+        if (alpha + 32 > 255)
+            alpha = 255;
         else
-            a += 32;
+            alpha += 32;
     }
 
-    void Transparency(Uint8 &a)
+    void Transparency(Uint8 &alpha)
     {
-        if (a - 32 < 0)
-            a = 0;
+        if (alpha - 32 < 0)
+            alpha = 0;
         else
-            a -= 32;
+            alpha -= 32;
     }
 
     ~LoadTexture()
@@ -177,8 +230,12 @@ public:
             SDL_DestroyTexture(this->texture);
 
             this->texture = NULL;
-            this->textureWidth = 0;
-            this->textureHeight = 0;
+            this->textureWidth = -1;
+            this->textureHeight = -1;
+
+            this->scale = 0;
+            this->xpos = -1;
+            this->ypos = -1;
         }
     }
 };
