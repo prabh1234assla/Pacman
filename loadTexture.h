@@ -24,7 +24,6 @@ private:
         }
         else
         {
-
             renderQuad.x = x;
             renderQuad.y = y;
             renderQuad.w = clip->w * this->scaleX;
@@ -68,7 +67,7 @@ public:
         return -1;
     }
 
-    void RenderOnViewPort(int x, int y, int w, int h, SDL_Renderer *renderer, SDL_Rect *SpriteClip, double angle, SDL_Point *center, SDL_RendererFlip flip)
+    void RenderOnViewPort(int x, int y, int w, int h, SDL_Renderer *renderer, SDL_Rect *SpriteClip, double angle = 0, SDL_Point *center = NULL, SDL_RendererFlip flip = SDL_FLIP_NONE)
     {
         SDL_Rect viewport;
 
