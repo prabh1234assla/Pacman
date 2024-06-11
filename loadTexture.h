@@ -17,45 +17,6 @@ private:
     int xpos = -1;
     int ypos = -1;
 
-    void Render(int x, int y, SDL_Renderer *renderer, SDL_Rect *clip, double angle, SDL_Point *center, SDL_RendererFlip flip)
-    {
-
-        SDL_Rect renderQuad = {x, y, this->textureWidth, this->textureHeight};
-
-        renderQuad.x = x;
-        renderQuad.y = y;
-
-        this->Collider.x = x;
-        this->Collider.y = y;
-
-        this->xpos = x;
-        this->ypos = y;
-
-        if (!clip)
-        {
-            std::cout << "Clip Was Wrong/Not Defined " << std::endl;
-
-            renderQuad.w = this->textureWidth;
-            renderQuad.h = this->textureHeight;
-
-            this->Collider.w = this->textureWidth;
-            this->Collider.h = this->textureHeight;
-
-            SDL_RenderCopyEx(renderer, this->texture, NULL, &renderQuad, angle, center, flip);
-        }
-        else
-        {
-
-            renderQuad.w = clip->w * this->scale;
-            renderQuad.h = clip->h * this->scale;
-
-            this->Collider.w = clip->w * this->scale;
-            this->Collider.h = clip->h * this->scale;
-
-            SDL_RenderCopyEx(renderer, this->texture, clip, &renderQuad, angle, center, flip);
-        }
-    };
-
 public:
     SDL_Texture *GetTexture()
     {
@@ -121,19 +82,55 @@ public:
         return -1;
     }
 
-    void RenderOnViewPort(int x, int y, int w, int h, SDL_Renderer *renderer, SDL_Rect *SpriteClip, double angle = 0, SDL_Point *center = NULL, SDL_RendererFlip flip = SDL_FLIP_NONE)
+    int GetScale()
     {
-        SDL_Rect viewport;
+        if (this->texture)
+        {
+            return this->scale;
+        }
+        std::cout << "Define Texture First" << std::endl;
 
-        viewport.x = x;
-        viewport.y = y;
-        viewport.w = w;
-        viewport.h = h;
-
-        SDL_RenderSetViewport(renderer, &viewport);
-
-        this->Render(x, y, renderer, SpriteClip, angle, center, flip);
+        return 0;
     }
+
+    void Render(int x, int y, SDL_Renderer *renderer, SDL_Rect *clip, double angle = 0, SDL_Point *center = NULL, SDL_RendererFlip flip = SDL_FLIP_NONE)
+    {
+
+        SDL_Rect renderQuad = {x, y, this->textureWidth, this->textureHeight};
+
+        renderQuad.x = x;
+        renderQuad.y = y;
+
+        this->Collider.x = x;
+        this->Collider.y = y;
+
+        this->xpos = x;
+        this->ypos = y;
+
+        if (!clip)
+        {
+            std::cout << "Clip Was Wrong/Not Defined " << std::endl;
+
+            renderQuad.w = this->textureWidth;
+            renderQuad.h = this->textureHeight;
+
+            this->Collider.w = this->textureWidth;
+            this->Collider.h = this->textureHeight;
+
+            SDL_RenderCopyEx(renderer, this->texture, NULL, &renderQuad, angle, center, flip);
+        }
+        else
+        {
+
+            renderQuad.w = clip->w * this->scale;
+            renderQuad.h = clip->h * this->scale;
+
+            this->Collider.w = clip->w * this->scale;
+            this->Collider.h = clip->h * this->scale;
+
+            SDL_RenderCopyEx(renderer, this->texture, clip, &renderQuad, angle, center, flip);
+        }
+    };
 
     void setColorKey(SDL_Surface *loadedSurface, Uint8 r, Uint8 g, Uint8 b)
     {

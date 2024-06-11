@@ -3,29 +3,24 @@
 #include <iostream>
 #include "loadTexture.h"
 #include "motions.h"
-
-SDL_Rect Sprite(int x, int y, int w, int h)
-{
-    SDL_Rect spriteClip;
-
-    spriteClip.x = x;
-    spriteClip.y = y;
-    spriteClip.w = w;
-    spriteClip.h = h;
-
-    return spriteClip;
-}
+#include "utility.h"
 
 void TileSprites(LoadTexture &tilesTexture, SDL_Rect SpriteClip[], int screenWidth, int screenHeight, int w, int h)
 {
-    const int XPos = screenWidth - tilesTexture.GetWidth() / 4 - 102;
-    const int YPos = screenHeight - tilesTexture.GetHeight() / 4 - 50;
+    const int XPos = screenWidth - tilesTexture.GetWidth() / tilesTexture.GetScale() + 40;
+    const int YPos = screenHeight - tilesTexture.GetHeight() / tilesTexture.GetScale() + 40;
 
-    SpriteClip[0] = Sprite(0, 0, w, h);
-    SpriteClip[1] = Sprite(XPos, 0, w, h);
-    SpriteClip[2] = Sprite(XPos, YPos, w, h);
-    SpriteClip[3] = Sprite(0, YPos, w, h);
-    SpriteClip[4] = Sprite(XPos / 2, YPos / 2, w, h);
+    w *= tilesTexture.GetScale();
+    h *= tilesTexture.GetScale();
+
+    const int Xoffset = 40;
+    const int Yoffset = 40;
+
+    SpriteClip[0] = Sprite(Xoffset, Yoffset, w, h);
+    SpriteClip[1] = Sprite(Xoffset + XPos, Yoffset, w, h);
+    SpriteClip[2] = Sprite(Xoffset + XPos, Yoffset + YPos, w, h);
+    SpriteClip[3] = Sprite(Xoffset, Yoffset + YPos, w, h);
+    SpriteClip[4] = Sprite(Xoffset + XPos / 2, Yoffset + YPos / 2, w, h);
 }
 
 void AnimatedSprite(SDL_Rect SpriteClip[], int spritesCount = 8)
@@ -46,8 +41,8 @@ int main(int argc, char *args[])
 
     else
     {
-        const int screenWidth = 640;
-        const int screenHeight = 350;
+        const int screenWidth = 500;
+        const int screenHeight = 300;
 
         SDL_Window *window = NULL;
         SDL_Renderer *renderer = NULL;
@@ -55,9 +50,10 @@ int main(int argc, char *args[])
         // Pacman Sprite
         LoadTexture pacMantexture;
         SDL_Rect SpriteClip[8];
+        SDL_RendererFlip flip = SDL_FLIP_VERTICAL;
         int frame = 0;
         const int spritesCount = 8;
-        const int framingDelay = 800;
+        const int framingDelay = 600;
 
         // Tiles Sprite
         LoadTexture tilesTexture;
@@ -83,7 +79,7 @@ int main(int argc, char *args[])
             }
             else
             {
-                SDL_SetRenderDrawColor(renderer, 0, 0, 0xaa, 255);
+                SDL_SetRenderDrawColor(renderer, 0, 0x11, 0xf2, 255);
 
                 int imgFlags = IMG_INIT_PNG;
 
@@ -93,15 +89,15 @@ int main(int argc, char *args[])
                 };
 
                 std::string PacmanPath = "assets/PacMan.png";
-                std::string TilesPath = "assets/Tileset.png";
+                std::string TilesPath = "assets/Tiles.png";
 
-                if (!pacMantexture.LoadTextureFromFile(PacmanPath, renderer, 2))
+                if (!pacMantexture.LoadTextureFromFile(PacmanPath, renderer, 1))
                 {
                     std::cout << "Pacman Texture Could Not be Loaded From File " << std::endl;
 
                     exit(0);
                 }
-                else if (!tilesTexture.LoadTextureFromFile(TilesPath, renderer, 4))
+                else if (!tilesTexture.LoadTextureFromFile(TilesPath, renderer, 3))
                 {
 
                     std::cout << "Tiles Texture Could Not be Loaded From File " << std::endl;
@@ -118,7 +114,6 @@ int main(int argc, char *args[])
 
             // alpha Value
             // Uint8 a = 0;
-            std::cout << tilesTexture.GetWidth() << std::endl;
 
             SDL_Event e;
             bool quit = false;
@@ -135,25 +130,25 @@ int main(int argc, char *args[])
                         switch (e.key.keysym.sym)
                         {
                         case SDLK_UP:
-                            std::cout << "Up Function Called " << std::endl;
+                            std::cout << "Up Button Pressed " << std::endl;
                             // texture.Opacity(a);
-                            MoveUp(d, y, pacMantexture.GetRect(), TilesColliders);
+                            MoveUp(&flip, d, y, pacMantexture.GetRect(), TilesColliders);
                             break;
 
                         case SDLK_DOWN:
-                            std::cout << "Down Function Called " << std::endl;
+                            std::cout << "Down Button Pressed " << std::endl;
                             // texture.Transparency(a);
-                            MoveDown(d, y, screenHeight, pacMantexture.GetRect(), TilesColliders);
+                            MoveDown(&flip, d, y, screenHeight, pacMantexture.GetRect(), TilesColliders);
                             break;
 
                         case SDLK_LEFT:
-                            std::cout << "Left Function Called " << std::endl;
-                            MoveLeft(d, x, pacMantexture.GetRect(), TilesColliders);
+                            std::cout << "Left Button Pressed " << std::endl;
+                            MoveLeft(&flip, d, x, pacMantexture.GetRect(), TilesColliders);
                             break;
 
                         case SDLK_RIGHT:
-                            std::cout << "Right Function Called " << std::endl;
-                            MoveRight(d, x, screenWidth, pacMantexture.GetRect(), TilesColliders);
+                            std::cout << "Right Button Pressed " << std::endl;
+                            MoveRight(&flip, d, x, screenWidth, pacMantexture.GetRect(), TilesColliders);
                             break;
                         }
                     }
@@ -167,11 +162,12 @@ int main(int argc, char *args[])
 
                 for (int i = 0; i < 5; ++i)
                 {
-                    tilesTexture.RenderOnViewPort(TilesColliders[i].x, TilesColliders[i].y, screenWidth, screenHeight, renderer, &TileClip);
+                    // VisualizeRects(renderer, &TilesColliders[i]);
+                    tilesTexture.Render(TilesColliders[i].x, TilesColliders[i].y, renderer, &TileClip);
                 }
 
                 SDL_Rect *currentClip = &SpriteClip[frame / framingDelay];
-                pacMantexture.RenderOnViewPort(x, y, screenWidth, screenHeight, renderer, currentClip, d);
+                pacMantexture.Render(x, y, renderer, currentClip, d, NULL, flip);
 
                 ++frame;
 
@@ -181,6 +177,7 @@ int main(int argc, char *args[])
                 }
                 // texture.setAlpha(a);
                 // texture.setColorMod(0x89, 0x7f, 0xa8);
+
                 SDL_RenderPresent(renderer);
             }
 

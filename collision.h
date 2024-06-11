@@ -1,8 +1,6 @@
 #pragma once
 
 #include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
-#include <iostream>
 
 bool Collison(SDL_Rect collider1, SDL_Rect collider2)
 {
@@ -38,12 +36,14 @@ bool Collison(SDL_Rect collider1, SDL_Rect collider2)
     return true;
 }
 
-bool CollisionDetect(SDL_Rect PacMan, SDL_Rect Colliders[], int n)
+bool CollisionDetect(SDL_Rect &PacMan, SDL_Rect Colliders[], int n)
 {
     for (int i = 0; i < n; ++i)
     {
-        if (Collison(PacMan, Colliders[i]))
+        if (Collison(PacMan, Colliders[i])){
+            std::cout << i << "th Collider Collided " << std::endl;
             return true;
+        }
     }
 
     return false;
