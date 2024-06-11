@@ -13,7 +13,7 @@ private:
     int scaleX = 0;
     int scaleY = 0;
 
-    void Render(int x, int y, SDL_Rect *clip, SDL_Renderer *renderer)
+    void Render(int x, int y, SDL_Rect *clip, SDL_Renderer *renderer, double angle, SDL_Point *center, SDL_RendererFlip flip)
     {
 
         SDL_Rect renderQuad = {x, y, this->textureWidth, this->textureHeight};
@@ -25,18 +25,13 @@ private:
         else
         {
 
-            renderQuad.x = clip->x;
-            renderQuad.y = clip->y;
-            renderQuad.w = clip->w*this->scaleX;
-            renderQuad.h = clip->h*this->scaleY;
+            renderQuad.x = x;
+            renderQuad.y = y;
+            renderQuad.w = clip->w * this->scaleX;
+            renderQuad.h = clip->h * this->scaleY;
         }
 
-        SDL_RenderCopy(renderer, this->texture, clip, &renderQuad);
-    }
-
-    void ColorKeying(SDL_Surface *loadedSurface, Uint8 r, Uint8 g, Uint8 b)
-    {
-        SDL_SetColorKey(loadedSurface, SDL_TRUE, SDL_MapRGB(loadedSurface->format, r, g, b));
+        SDL_RenderCopyEx(renderer, this->texture, clip, &renderQuad, angle, center, flip);
     }
 
 public:
@@ -73,12 +68,7 @@ public:
         return -1;
     }
 
-    void ColorMod(Uint8 r, Uint8 g, Uint8 b)
-    {
-        SDL_SetTextureColorMod(this->texture, r, g, b);
-    }
-
-    void RenderOnViewPort(int x, int y, int w, int h, SDL_Renderer *renderer, SDL_Rect SpriteClip)
+    void RenderOnViewPort(int x, int y, int w, int h, SDL_Renderer *renderer, SDL_Rect *SpriteClip, double angle, SDL_Point *center, SDL_RendererFlip flip)
     {
         SDL_Rect viewport;
 
@@ -89,7 +79,27 @@ public:
 
         SDL_RenderSetViewport(renderer, &viewport);
 
-        this->Render(0, 0, &SpriteClip, renderer);
+        this->Render(x, y, SpriteClip, renderer, angle, center, flip);
+    }
+
+    void setColorKey(SDL_Surface *loadedSurface, Uint8 r, Uint8 g, Uint8 b)
+    {
+        SDL_SetColorKey(loadedSurface, SDL_TRUE, SDL_MapRGB(loadedSurface->format, r, g, b));
+    }
+
+    void setColorMod(Uint8 r, Uint8 g, Uint8 b)
+    {
+        SDL_SetTextureColorMod(this->texture, r, g, b);
+    }
+
+    void setBlendMode(SDL_BlendMode blending)
+    {
+        SDL_SetTextureBlendMode(this->texture, blending);
+    }
+
+    void setAlpha(Uint8 alpha)
+    {
+        SDL_SetTextureAlphaMod(this->texture, alpha);
     }
 
     bool LoadTextureFromFile(std::string path, SDL_Renderer *renderer, int scaleX = 1, int scaleY = 1, bool Enable = false, Uint8 r = 0, Uint8 g = 0, Uint8 b = 0)
@@ -111,7 +121,7 @@ public:
             if (Enable)
             {
 
-                this->ColorKeying(loadedSurface, r, g, b);
+                this->setColorKey(loadedSurface, r, g, b);
             }
 
             texture = SDL_CreateTextureFromSurface(renderer, loadedSurface);
@@ -137,6 +147,22 @@ public:
         }
 
         return this->texture != NULL;
+    }
+
+    void Opacity(Uint8 &a)
+    {
+        if (a + 32 > 255)
+            a = 255;
+        else
+            a += 32;
+    }
+
+    void Transparency(Uint8 &a)
+    {
+        if (a - 32 < 0)
+            a = 0;
+        else
+            a -= 32;
     }
 
     ~LoadTexture()

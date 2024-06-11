@@ -32,7 +32,14 @@ int main(int argc, char *args[])
         SDL_Renderer *renderer = NULL;
         LoadTexture texture;
 
-        SDL_Rect SpriteClip;
+        SDL_Rect SpriteClip[8];
+        int frame = 0;
+        const int spritesCount = 8;
+        const int framingDelay = 800;
+
+        double d = 0;
+        int x = 0;
+        int y = 0;
 
         window = SDL_CreateWindow("Pacman Game", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, screenWidth, screenHeight, SDL_WINDOW_SHOWN);
 
@@ -60,9 +67,9 @@ int main(int argc, char *args[])
                     std::cout << "SDL_image Could Not Be Initialized " << IMG_GetError() << std::endl;
                 };
 
-                std::string Path = "pacmanPack/BigCoin.png";
+                std::string Path = "pacmanPack/PacMan.png";
 
-                if (!texture.LoadTextureFromFile(Path, renderer, 4, 4))
+                if (!texture.LoadTextureFromFile(Path, renderer, 10, 10))
                 {
                     std::cout << "Texture Could Not be Loaded From File " << std::endl;
 
@@ -70,10 +77,17 @@ int main(int argc, char *args[])
                 }
                 else
                 {
-                    std::cout << texture.GetHeight() << texture.GetWidth() << std::endl;
-                    SpriteClip = Sprite(0, 0, 16, 16);
+                    texture.setBlendMode(SDL_BLENDMODE_BLEND);
+
+                    for (int i = 0; i < 8; ++i)
+                    {
+                        SpriteClip[i] = Sprite(16 * i, 0, 16, 16);
+                    }
                 }
             }
+
+            // alpha Value
+            // Uint8 a = 0;
 
             SDL_Event e;
             bool quit = false;
@@ -91,26 +105,52 @@ int main(int argc, char *args[])
                         {
                         case SDLK_UP:
                             std::cout << "Up Function Called " << std::endl;
+                            // texture.Opacity(a);
+                            // d+=60;
+                            --y;
+                            if (y <= 0)
+                                y = 0;
                             break;
 
                         case SDLK_DOWN:
                             std::cout << "Down Function Called " << std::endl;
+                            // texture.Transparency(a);
+                            // d-=60;
+                            ++y;
+                            if (y >= screenHeight)
+                                y = screenHeight;
                             break;
 
                         case SDLK_LEFT:
                             std::cout << "Left Function Called " << std::endl;
+                            --x;
+                            if (x <= 0)
+                                x = 0;
                             break;
 
                         case SDLK_RIGHT:
                             std::cout << "Right Function Called " << std::endl;
+                            ++x;
+                            if (x >= screenWidth)
+                                x = screenWidth;
                             break;
                         }
                     }
                 }
 
                 SDL_RenderClear(renderer);
-                texture.RenderOnViewPort(0, 0, screenWidth, screenHeight, renderer, SpriteClip);
-                texture.ColorMod(0x89, 0x7f, 0xa8);
+
+                SDL_Rect *currentClip = &SpriteClip[frame / framingDelay];
+                texture.RenderOnViewPort(x, y, screenWidth, screenHeight, renderer, currentClip, d, NULL, SDL_FLIP_NONE);
+
+                ++frame;
+
+                if (frame / framingDelay >= spritesCount)
+                {
+                    frame = 0;
+                }
+                // texture.setAlpha(a);
+                // texture.setColorMod(0x89, 0x7f, 0xa8);
                 SDL_RenderPresent(renderer);
             }
 
