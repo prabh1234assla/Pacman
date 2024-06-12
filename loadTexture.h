@@ -204,6 +204,8 @@ public:
             alpha = 255;
         else
             alpha += 32;
+
+        this->setAlpha(alpha);
     }
 
     void Transparency(Uint8 &alpha)
@@ -212,6 +214,8 @@ public:
             alpha = 0;
         else
             alpha -= 32;
+
+        this->setAlpha(alpha);
     }
 
     ~LoadTexture()

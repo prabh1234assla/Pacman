@@ -50,17 +50,26 @@ int main(int argc, char *args[])
         // Pacman Sprite
         LoadTexture pacMantexture;
         SDL_Rect SpriteClip[8];
-        SDL_RendererFlip flip = SDL_FLIP_VERTICAL;
+        SDL_RendererFlip flip = SDL_FLIP_NONE;
         int frame = 0;
         const int spritesCount = 8;
         const int framingDelay = 600;
 
-        // Tiles Sprite
+        // Tiles Sprites
         LoadTexture tilesTexture;
         SDL_Rect TilesColliders[5];
         double d = 0;
         int x = 200;
         int y = 30;
+
+        // Ghost Sprite
+        LoadTexture ghostTexture;
+        SDL_Rect ghostSpriteClip[8];
+        int gxpos = 34;
+        int gypos = 24;
+        double dghost = 0;
+        SDL_RendererFlip flipghost = SDL_FLIP_NONE;
+        int change = -1;
 
         window = SDL_CreateWindow("Pacman Game", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, screenWidth, screenHeight, SDL_WINDOW_SHOWN);
 
@@ -90,6 +99,7 @@ int main(int argc, char *args[])
 
                 std::string PacmanPath = "assets/PacMan.png";
                 std::string TilesPath = "assets/Tiles.png";
+                std::string GhostPath = "assets/blueGhost.png";
 
                 if (!pacMantexture.LoadTextureFromFile(PacmanPath, renderer, 1))
                 {
@@ -104,16 +114,24 @@ int main(int argc, char *args[])
 
                     exit(0);
                 }
+                else if (!ghostTexture.LoadTextureFromFile(GhostPath, renderer, 1))
+                {
+
+                    std::cout << "Ghost Texture Could Not be Loaded From File " << std::endl;
+
+                    exit(0);
+                }
                 else
                 {
-                    // texture.setBlendMode(SDL_BLENDMODE_BLEND);
+                    pacMantexture.setBlendMode(SDL_BLENDMODE_BLEND);
 
                     AnimatedSprite(SpriteClip);
+                    AnimatedSprite(ghostSpriteClip);
                 }
             }
 
             // alpha Value
-            // Uint8 a = 0;
+            Uint8 a = 0;
 
             SDL_Event e;
             bool quit = false;
@@ -131,13 +149,13 @@ int main(int argc, char *args[])
                         {
                         case SDLK_UP:
                             std::cout << "Up Button Pressed " << std::endl;
-                            // texture.Opacity(a);
+                            // pacMantexture.Opacity(a);
                             MoveUp(&flip, d, y, pacMantexture.GetRect(), TilesColliders);
                             break;
 
                         case SDLK_DOWN:
                             std::cout << "Down Button Pressed " << std::endl;
-                            // texture.Transparency(a);
+                            // pacMantexture.Transparency(a);
                             MoveDown(&flip, d, y, screenHeight, pacMantexture.GetRect(), TilesColliders);
                             break;
 
@@ -156,6 +174,7 @@ int main(int argc, char *args[])
 
                 SDL_RenderClear(renderer);
 
+                // Tiles Rendering
                 SDL_Rect TileClip = Sprite(256, 0, 34, 32);
 
                 TileSprites(tilesTexture, TilesColliders, screenWidth, screenHeight, TileClip.w, TileClip.h);
@@ -166,8 +185,28 @@ int main(int argc, char *args[])
                     tilesTexture.Render(TilesColliders[i].x, TilesColliders[i].y, renderer, &TileClip);
                 }
 
+                // PacMan & Ghost Rendering
                 SDL_Rect *currentClip = &SpriteClip[frame / framingDelay];
                 pacMantexture.Render(x, y, renderer, currentClip, d, NULL, flip);
+
+                SDL_Rect *ghostcurrentClip = &ghostSpriteClip[frame / framingDelay];
+                ghostTexture.Render(gxpos, gypos, renderer, ghostcurrentClip, dghost, NULL, flipghost);
+
+                if (Collison(ghostTexture.GetRect(), pacMantexture.GetRect()))
+                {
+                    std::cout << "Collison Occured Between PacMan & Ghost" << std::endl;
+
+                    if (frame / framingDelay != change)
+                    {
+                        pacMantexture.Transparency(a);
+
+                        change = frame / framingDelay;
+                    }
+
+                    getchar();
+
+                    quit = true;
+                }
 
                 ++frame;
 
@@ -175,7 +214,7 @@ int main(int argc, char *args[])
                 {
                     frame = 0;
                 }
-                // texture.setAlpha(a);
+
                 // texture.setColorMod(0x89, 0x7f, 0xa8);
 
                 SDL_RenderPresent(renderer);
